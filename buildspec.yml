@@ -1,21 +1,39 @@
 version: 0.2
 
+env:
+  variables:
+    IMAGE_REPO_NAME: "spring-boot-hello-world"
+    IMAGE_TAG: "latest"
+    AWS_DEFAULT_REGION: "us-east-1"         # e.g., us-east-1
+    AWS_ACCOUNT_ID: "654654607707"     # replace with your AWS account ID
+    EKS_CLUSTER_NAME: "serious-blues-seal" # replace with your EKS cluster name
+
 phases:
-  install:
-    runtime-versions:
-      java: corretto11
   pre_build:
     commands:
-      - echo "Installing Maven..."
-      
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - $(aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com)
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - echo Repository URI is $REPOSITORY_URI
   build:
     commands:
-      - echo "Building the Spring Boot application..."
-      - mvn clean install
+      - echo Build started on `date`
+      - mvn clean package -DskipTests
+      - echo Building the Docker image...
+      - docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG .
+      - docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $REPOSITORY_URI:$IMAGE_TAG
   post_build:
     commands:
-      - echo "Build completed successfully!"
+      - echo Build completed on `date`
+      - echo Pushing the Docker image to ECR...
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Updating Kubernetes deployment with new image...
+      - aws eks --region $AWS_DEFAULT_REGION update-kubeconfig --name $EKS_CLUSTER_NAME
+      - kubectl set image deployment/spring-boot-hello-world spring-boot-container=$REPOSITORY_URI:$IMAGE_TAG
+      - kubectl apply -f service.yaml
+      - printf '[{"name":"spring-boot-hello-world","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 
 artifacts:
   files:
-    - target/*.jar
+    - imagedefinitions.json
