@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: spring-boot-container
-        image: your-account-id.dkr.ecr.your-region.amazonaws.com/spring-boot-hello-world:latest
+        image: 654654607707.dkr.ecr.us-east-1.amazonaws.com/spring-boot-hello-world:latest
         ports:
         - containerPort: 8080
         readinessProbe:
