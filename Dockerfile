@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM openjdk:11-jre-slim
+COPY target/spring-boot-hello-world-1.0.0-SNAPSHOT.jar app.jar
 EXPOSE 8080
-ADD target/spring-boot-2-hello-world-1.0.2-SNAPSHOT.jar spring-boot-2-hello-world-1.0.2-SNAPSHOT.jar
-ENTRYPOINT ["java","-jar","/spring-boot-2-hello-world-1.0.2-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar"]
