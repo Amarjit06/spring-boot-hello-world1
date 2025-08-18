@@ -18,9 +18,9 @@ phases:
       - echo "Installing Maven..."
       - echo "Logging in to ECR..."
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 654654607707.dkr.ecr.us-east-1.amazonaws.com
-      - REPOSITORY_URI=654654607707.dkr.ecr.us-east-1.amazonaws.com/app1
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - export REPOSITORY_URI=654654607707.dkr.ecr.us-east-1.amazonaws.com/app1
+      - export COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - export IMAGE_TAG=${COMMIT_HASH:=latest}
 
   build:
     commands:
@@ -36,7 +36,7 @@ phases:
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - docker push $REPOSITORY_URI:latest
       - echo "Build completed successfully!"
-      - echo "Image URI: $REPOSITORY_URI:$IMAGE_TAG"
+      - printf "Image URI: %s:%s" $REPOSITORY_URI $IMAGE_TAG
 
 artifacts:
   files:
